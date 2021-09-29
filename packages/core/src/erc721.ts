@@ -16,9 +16,10 @@ export interface ERC721Options extends CommonOptions {
   pausable?: boolean;
   mintable?: boolean;
   incremental?: boolean;
+  openSeaEnabled?: boolean;
 }
 
-export function buildERC721(opts: ERC721Options): Contract {
+export function buildERC721Single(opts: ERC721Options): Contract {
   const c = new ContractBuilder(opts.name);
 
   const { access, upgradeable } = withCommonDefaults(opts);
@@ -49,9 +50,60 @@ export function buildERC721(opts: ERC721Options): Contract {
     addMintable(c, access, opts.incremental);
   }
 
+  if (opts.openSeaEnabled) {
+    addOpenSeaEnabled(c, access, opts.openSeaEnabled);
+  }
+
   setUpgradeable(c, upgradeable, access);
 
   return c;
+}
+
+export function buildERC721(opts: ERC721Options): Contract[] {
+
+  const ownableProxy = new ContractBuilder('OwnableDelegateProxy');
+  const proxy = new ContractBuilder('ProxyRegistry');
+  buildOwnableDelegateProxy(ownableProxy);
+  buildProxyRegistry(proxy);
+
+  const c = new ContractBuilder(opts.name);
+
+  const { access, upgradeable } = withCommonDefaults(opts);
+
+  addBase(c, opts.name, opts.symbol);
+  addIntroComment(c);
+
+  if (opts.baseUri) {
+    addBaseURI(c, opts.baseUri);
+  }
+
+  if (opts.enumerable) {
+    addEnumerable(c);
+  }
+
+  if (opts.uriStorage) {
+    addURIStorage(c);
+  }
+
+  if (opts.pausable) {
+    addPausable(c, access, [functions._beforeTokenTransfer]);
+  }
+
+  if (opts.burnable) {
+    addBurnable(c);
+  }
+
+  if (opts.mintable) {
+    addMintable(c, access, opts.incremental);
+  }
+
+  if (opts.openSeaEnabled) {
+    addOpenSeaEnabled(c, access, opts.openSeaEnabled);
+  }
+
+  setUpgradeable(c, upgradeable, access);
+
+  return [ownableProxy, proxy, c];
 }
 
 function addBase(c: ContractBuilder, name: string, symbol: string) {
@@ -117,6 +169,39 @@ function addMintable(c: ContractBuilder, access: Access, incremental = false) {
   }
 }
 
+function addOpenSeaEnabled(c: ContractBuilder, access: Access, enabled = false) {
+  addProxyRegistryAddress(c);
+
+  const fn = functions.isApprovedForAll;
+  c.addOverride('ERC721', functions.isApprovedForAll);
+  c.addFunctionCode('ProxyRegistry proxyRegistry = ProxyRegistry(proxyRegistryAddress);', fn);
+  c.addFunctionCode('if (address(proxyRegistry.proxies(owner)) == operator) {', fn);
+  c.addFunctionCode('   return true;', fn);
+  c.addFunctionCode('}', fn);
+}
+
+function addProxyRegistryAddress(c: ContractBuilder) {
+  c.addConstructorArgs("_proxyRegistryAddress", "address");
+  c.addVariable('address proxyRegistryAddress;');
+  c.addConstructorCode('proxyRegistryAddress = _proxyRegistryAddress;')
+}
+
+function addIntroComment(c: ContractBuilder) {
+  c.addVariable(`// This is the main contract, that can mint ${c.name} tokens for users`);
+  c.addVariable(' ');
+
+}
+
+function buildOwnableDelegateProxy(c: ContractBuilder) {
+  c.addVariable('// This contract is needed for XYZ');
+}
+
+function buildProxyRegistry(c: ContractBuilder) {
+  c.addVariable('// This contract is needed for ABC');
+  c.addVariable(' ');
+  c.addVariable('mapping(address => OwnableDelegateProxy) public proxies;');
+}
+
 const functions = defineFunctions({
   _beforeTokenTransfer: {
     kind: 'internal' as const,
@@ -148,6 +233,16 @@ const functions = defineFunctions({
     args: [],
     returns: ['string memory'],
     mutability: 'pure' as const,
+  },
+
+  isApprovedForAll: {
+    kind: 'public' as const,
+    args: [
+      { name: 'owner', type: 'address' },
+      { name: 'operator', type: 'address' },
+    ],
+    returns: ['bool'],
+    mutability: 'view' as const,
   },
 });
 

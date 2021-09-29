@@ -18,8 +18,8 @@
       </HelpTooltip>
     </label>
     <label class:checked={access === 'roles'}>
-      <input type="radio" bind:group={access} value="roles">
-      Roles
+      <input type="radio" bind:group={access} value="roles" disabled>
+      Roles [disabled]
       <HelpTooltip link="https://docs.openzeppelin.com/contracts/4.x/api/access#AccessControl">
         Flexible mechanism with a separate role for each privileged action. A role can have many authorized accounts.
       </HelpTooltip>

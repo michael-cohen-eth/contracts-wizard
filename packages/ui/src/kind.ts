@@ -8,13 +8,12 @@ export function sanitizeKind(kind: unknown): Kind {
   if (isKind(uppercase)) {
     return uppercase;
   } else {
-    return 'ERC20';
+    return 'ERC721';
   }
 }
 
 function isKind<T>(value: Kind | T): value is Kind {
   switch (value) {
-    case 'ERC20':
     case 'ERC1155':
     case 'ERC721':
       return true;

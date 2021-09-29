@@ -1,7 +1,7 @@
 import test from 'ava';
 
 import { buildERC721, ERC721Options } from './erc721';
-import { printContract } from './print';
+import { printContracts } from './print';
 
 function testERC721(title: string, opts: Partial<ERC721Options>) {
   test(title, t => {
@@ -10,7 +10,7 @@ function testERC721(title: string, opts: Partial<ERC721Options>) {
       symbol: 'MTK',
       ...opts,
     });
-    t.snapshot(printContract(c));
+    t.snapshot(printContracts(c));
   });
 }
 

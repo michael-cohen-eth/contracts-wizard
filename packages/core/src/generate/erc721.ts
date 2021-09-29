@@ -6,8 +6,8 @@ import { generateAlternatives } from './alternatives';
 const booleans = [true, false];
 
 const blueprint = {
-  name: ['MyToken'],
-  symbol: ['MTK'],
+  name: ['MyOpenSeaNFT'],
+  symbol: ['OSNFT'],
   baseUri: ['https://example.com/'],
   enumerable: booleans,
   uriStorage: booleans,
@@ -15,6 +15,7 @@ const blueprint = {
   pausable: booleans,
   mintable: booleans,
   incremental: booleans,
+  openSeaEnabled: booleans,
   access: accessOptions,
   upgradeable: upgradeableOptions,
 };

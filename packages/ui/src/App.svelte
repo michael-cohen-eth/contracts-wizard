@@ -1,7 +1,6 @@
 <script lang="ts">
     import hljs from './highlightjs';
 
-    import ERC20Controls from './ERC20Controls.svelte';
     import ERC721Controls from './ERC721Controls.svelte';
     import ERC1155Controls from './ERC1155Controls.svelte';
     import CopyIcon from './icons/CopyIcon.svelte';
@@ -15,22 +14,23 @@
     import OverflowMenu from './OverflowMenu.svelte';
 
     import type { GenericOptions } from '@openzeppelin/wizard';
-    import { ContractBuilder, buildGeneric, printContract, printContractVersioned } from '@openzeppelin/wizard';
+    import { ContractBuilder, buildGeneric, printContract, printContractVersioned, printContractsVersioned } from '@openzeppelin/wizard';
     import { postConfig } from './post-config';
     import { remixURL } from './remix';
     import type { Kind } from './kind';
     import { sanitizeKind } from './kind';
 
     import { saveAs } from 'file-saver';
+import { printContracts } from '@openzeppelin/wizard/src';
 
-    export let tab: Kind = 'ERC20';
+    export let tab: Kind = 'ERC721';
     $: tab = sanitizeKind(tab);
 
     let allOpts: { [k in Kind]?: Required<GenericOptions> } = {};
 
     $: opts = allOpts[tab];
-    $: contract = opts ? buildGeneric(opts) : new ContractBuilder('MyToken');
-    $: code = printContract(contract);
+    $: contracts = opts ? buildGeneric(opts) : [new ContractBuilder('MyOpenSeaContract')];
+    $: code = Array.isArray(contracts) ? printContracts(contracts) : printContract(contracts);
     $: highlightedCode = hljs.highlight('solidity', code).value;
 
     const copyHandler = async () => {
@@ -41,7 +41,7 @@
     };
 
     const remixHandler = async () => {
-      const versionedCode = printContractVersioned(contract);
+      const versionedCode = Array.isArray(contracts) ? printContractsVersioned(contracts) : printContractVersioned(contracts);
       window.open(remixURL(versionedCode).toString(), '_blank');
       if (opts) {
         await postConfig(opts, 'remix');
@@ -59,8 +59,8 @@
     const zipModule = import('@openzeppelin/wizard/zip');
 
     const downloadVendoredHandler = async () => {
-      const { zipContract } = await zipModule;
-      const zip = zipContract(contract);
+      const { zipContract, zipContracts } = await zipModule;
+      const zip = Array.isArray(contracts) ? zipContracts(contracts) : zipContract(contracts);
       const blob = await zip.generateAsync({ type: 'blob' });
       saveAs(blob, 'contracts.zip');
       if (opts) {
@@ -73,9 +73,6 @@
   <div class="header flex flex-row justify-between">
     <div class="tab overflow-hidden">
       <OverflowMenu>
-        <button class:selected={tab === 'ERC20'} on:click={() => tab = 'ERC20'}>
-          ERC20
-        </button>
         <button class:selected={tab === 'ERC721'} on:click={() => tab = 'ERC721'}>
           ERC721
         </button>
@@ -125,22 +122,11 @@
 
   <div class="flex flex-row flex-col-gap-4 flex-grow">
     <div class="controls w-64 flex flex-col flex-shrink-0 justify-between">
-      <div class:display-none={tab !== 'ERC20'}>
-        <ERC20Controls bind:opts={allOpts.ERC20} />
-      </div>
       <div class:display-none={tab !== 'ERC721'}>
         <ERC721Controls bind:opts={allOpts.ERC721} />
       </div>
       <div class:display-none={tab !== 'ERC1155'}>
         <ERC1155Controls bind:opts={allOpts.ERC1155} />
-      </div>
-      <div class="controls-footer">
-        <a href="https://forum.openzeppelin.com/" target="_blank">
-          <ForumIcon/> Forum
-        </a>
-        <a href="https://docs.openzeppelin.com/" target="_blank">
-          <DocsIcon/> Docs
-        </a>
       </div>
     </div>
 

@@ -7,10 +7,58 @@ import { formatLines, spaceBetween, Lines } from './utils/format-lines';
 
 const SOLIDITY_VERSION = '0.8.2';
 
+export function printContracts(contract: Contract[], opts?: Options): string {
+  // if (Array.isArray(contract) && contract.length > 1) {
+    let cArr = contract!;
+    const imports: string[] = [];
+    const contractHeaderLine: string[] = [];
+    const contractLines: Lines[] = [];
+    for (let i = 0; i != cArr.length; i+=1) {
+      const c = cArr[i]!;
+      const helpers = withHelpers(c, opts);
+      c.imports.forEach(p => imports.push(`import "${helpers.transformImport(p)}";`));
+      contractHeaderLine.push([`contract ${c.name}`, ...printInheritance(c, helpers), '{'].join(' '));
+      contractLines.push();
+    }
+
+    const mainContract = cArr[0]!;
+    return formatLines(
+      true,
+      ...spaceBetween(
+        [
+          `// SPDX-License-Identifier: ${mainContract.license}`,
+          `pragma solidity ^${SOLIDITY_VERSION};`,
+        ],
+        imports,
+        cArr.map(c => {
+          const helpers = withHelpers(c, opts);
+          if (c.variables.length == 0 && c.functions.length == 0 && c.constructorCode.length == 0) {
+            return [[`contract ${c.name}`, ...printInheritance(c, helpers), '{', '}'].join(' '), ' '];
+          } else {
+            return [
+              [`contract ${c.name}`, ...printInheritance(c, helpers), '{'].join(' '),
+      
+              spaceBetween(
+                printUsingFor(c, helpers),
+                c.variables.map(helpers.transformVariable),
+                printConstructor(c, helpers),
+                ...sortedFunctions(c).map(f => printFunction(f, helpers)),
+              ),
+      
+              `}`,
+              ' ',
+            ]
+          }
+        }),
+      ),
+    );
+}
+
 export function printContract(contract: Contract, opts?: Options): string {
   const helpers = withHelpers(contract, opts);
 
   return formatLines(
+    false,
     ...spaceBetween(
       [
         `// SPDX-License-Identifier: ${contract.license}`,
@@ -66,7 +114,7 @@ function printConstructor(contract: Contract, helpers: Helpers): Lines[] {
     const head = helpers.upgradeable ? 'function initialize' : 'constructor';
     return printFunction2(
       head,
-      [],
+      contract.constructorArgs.map(printArgument),
       modifiers,
       body,
     );

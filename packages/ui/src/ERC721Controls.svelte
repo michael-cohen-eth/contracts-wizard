@@ -8,14 +8,15 @@
 
   export const opts: Required<GenericOptions> = {
     kind: 'ERC721',
-    name: 'MyToken',
-    symbol: 'MTK',
+    name: 'MyOpenSeaNFT',
+    symbol: 'OSNFT',
     baseUri: '',
     enumerable: false,
     uriStorage: false,
     burnable: false,
     pausable: false,
-    mintable: false,
+    mintable: true,
+    openSeaEnabled: true,
     incremental: false,
     access: 'ownable',
     upgradeable: false,
@@ -64,8 +65,15 @@
   <h1>Features</h1>
 
   <div class="checkbox-group">
+    <label class:checked={true}>
+      <input type="checkbox" bind:checked={opts.openSeaEnabled} disabled=true>
+      OpenSea Enabled
+      <HelpTooltip link="https://docs.openzeppelin.com/contracts/4.x/api/token/erc721#ERC721-isApprovedForAll-address-address-">
+        Allows for contract users to sell and transfer on OpenSea without an extra transaction.
+      </HelpTooltip>
+    </label>
     <label class:checked={opts.mintable}>
-      <input type="checkbox" bind:checked={opts.mintable}>
+      <input type="checkbox" bind:checked={opts.mintable} disabled=true>
       Mintable
       <HelpTooltip>
         Privileged accounts will be able to emit new tokens.

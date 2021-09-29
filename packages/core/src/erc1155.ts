@@ -14,7 +14,7 @@ export interface ERC1155Options extends CommonOptions {
   mintable?: boolean;
 }
 
-export function buildERC1155(opts: ERC1155Options): Contract {
+export function buildERC1155(opts: ERC1155Options): Contract[] {
   const c = new ContractBuilder(opts.name);
 
   const { access, upgradeable } = withCommonDefaults(opts);
@@ -36,7 +36,7 @@ export function buildERC1155(opts: ERC1155Options): Contract {
 
   setUpgradeable(c, upgradeable, access);
 
-  return c;
+  return [c];
 }
 
 function addBase(c: ContractBuilder, uri: string) {

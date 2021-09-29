@@ -10,6 +10,7 @@ export interface Contract {
   constructorCode: string[];
   variables: string[];
   upgradeable: boolean;
+  constructorArgs: FunctionArgument[];
 }
 
 export interface Parent {
@@ -68,6 +69,7 @@ export class ContractBuilder implements Contract {
   readonly using: Using[] = [];
 
   readonly constructorCode: string[] = [];
+  readonly cArgs: FunctionArgument[] = [];
   readonly variableSet: Set<string> = new Set();
 
   private parentMap: Map<string, Parent> = new Map<string, Parent>();
@@ -102,6 +104,10 @@ export class ContractBuilder implements Contract {
 
   get variables(): string[] {
     return [...this.variableSet];
+  }
+
+  get constructorArgs(): FunctionArgument[] {
+    return this.cArgs;
   }
 
   addParent(contract: ParentContract, params: string[] = []): boolean {
@@ -148,6 +154,10 @@ export class ContractBuilder implements Contract {
 
   addConstructorCode(code: string) {
     this.constructorCode.push(code);
+  }
+
+  addConstructorArgs(name: string, type: string) {
+    this.cArgs.push({name: name, type: type});
   }
 
   addFunctionCode(code: string, baseFn: BaseFunction, mutability?: FunctionMutability) {

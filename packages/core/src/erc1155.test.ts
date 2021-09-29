@@ -1,7 +1,7 @@
 import test from 'ava';
 
 import { buildERC1155, ERC1155Options } from './erc1155';
-import { printContract } from './print';
+import { printContracts } from './print';
 
 function testERC1155(title: string, opts: Partial<ERC1155Options>) {
   test(title, t => {
@@ -10,7 +10,7 @@ function testERC1155(title: string, opts: Partial<ERC1155Options>) {
       uri: 'https://gateway.pinata.cloud/ipfs/QmcP9hxrnC1T5ATPmq2saFeAM1ypFX9BnAswCdHB9JCjLA/',
       ...opts,
     });
-    t.snapshot(printContract(c));
+    t.snapshot(printContracts(c));
   });
 }
 
