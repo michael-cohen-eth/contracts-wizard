@@ -1,8 +1,11 @@
 <script lang="ts">
+    import { createEventDispatcher } from 'svelte';
+
     import hljs from './highlightjs';
 
     import ERC721Controls from './ERC721Controls.svelte';
     import ERC1155Controls from './ERC1155Controls.svelte';
+    import GovernorControls from './GovernorControls.svelte';
     import CopyIcon from './icons/CopyIcon.svelte';
     import RemixIcon from './icons/RemixIcon.svelte';
     import DownloadIcon from './icons/DownloadIcon.svelte';
@@ -13,24 +16,39 @@
     import Dropdown from './Dropdown.svelte';
     import OverflowMenu from './OverflowMenu.svelte';
 
-    import type { GenericOptions } from '@openzeppelin/wizard';
-    import { ContractBuilder, buildGeneric, printContract, printContractVersioned, printContractsVersioned } from '@openzeppelin/wizard';
+    import type { KindedOptions, Kind, Contract, OptionsErrorMessages } from '@openzeppelin/wizard';
+    import { ContractBuilder, buildGeneric, printContract, printContractVersioned, sanitizeKind, OptionsError } from '@openzeppelin/wizard';
     import { postConfig } from './post-config';
     import { remixURL } from './remix';
-    import type { Kind } from './kind';
-    import { sanitizeKind } from './kind';
 
     import { saveAs } from 'file-saver';
-import { printContracts } from '@openzeppelin/wizard/src';
+    import { printContracts } from '@openzeppelin/wizard/src';
 
-    export let tab: Kind = 'ERC721';
-    $: tab = sanitizeKind(tab);
+    const dispatch = createEventDispatcher();
+      dispatch('tab-change', tab);
+    };
 
-    let allOpts: { [k in Kind]?: Required<GenericOptions> } = {};
+    let allOpts: { [k in Kind]?: Required<KindedOptions[k]> } = {};
+    let errors: { [k in Kind]?: OptionsErrorMessages } = {};
 
     $: opts = allOpts[tab];
-    $: contracts = opts ? buildGeneric(opts) : [new ContractBuilder('MyOpenSeaContract')];
-    $: code = Array.isArray(contracts) ? printContracts(contracts) : printContract(contracts);
+
+    $: {
+      if (opts) {
+        try {
+          contract = buildGeneric(opts);
+          errors[tab] = undefined;
+        } catch (e: unknown) {
+          if (e instanceof OptionsError) {
+            errors[tab] = e.messages;
+          } else {
+            throw e;
+          }
+        }
+      }
+    }
+
+    $: code = printContract(contract);
     $: highlightedCode = hljs.highlight('solidity', code).value;
 
     const copyHandler = async () => {
@@ -78,6 +96,9 @@ import { printContracts } from '@openzeppelin/wizard/src';
         </button>
         <button class:selected={tab === 'ERC1155'} on:click={() => tab = 'ERC1155'}>
           ERC1155
+        </button>
+        <button class:selected={tab === 'Governor'} on:click={() => tab = 'Governor'}>
+          Governor
         </button>
       </OverflowMenu>
     </div>
@@ -127,6 +148,17 @@ import { printContracts } from '@openzeppelin/wizard/src';
       </div>
       <div class:display-none={tab !== 'ERC1155'}>
         <ERC1155Controls bind:opts={allOpts.ERC1155} />
+      </div>
+      <div class:display-none={tab !== 'Governor'}>
+        <GovernorControls bind:opts={allOpts.Governor} errors={errors.Governor} />
+      </div>
+      <div class="controls-footer">
+        <a href="https://forum.openzeppelin.com/" target="_blank">
+          <ForumIcon/> Forum
+        </a>
+        <a href="https://docs.openzeppelin.com/" target="_blank">
+          <DocsIcon/> Docs
+        </a>
       </div>
     </div>
 
