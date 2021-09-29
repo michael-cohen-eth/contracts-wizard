@@ -1,8 +1,8 @@
 import test from 'ava';
 
 import { zipContract } from './zip';
-import { buildERC721Single } from './erc721';
-import { generateOptions } from './generate/sources';
+import { buildERC20 } from './erc20';
+import { generateSources } from './generate/sources';
 import { buildGeneric } from './build-generic';
 
 test('erc20 basic', t => {
@@ -24,4 +24,12 @@ test('erc20 basic', t => {
     '@openzeppelin/contracts/utils/Context.sol',
     'MyToken.sol',
   ]);
+});
+
+test('can zip all combinations', t => {
+  for (const { options } of generateSources('all')) {
+    const c = buildGeneric(options);
+    zipContract(c);
+  }
+  t.pass();
 });
