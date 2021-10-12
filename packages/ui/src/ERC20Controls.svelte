@@ -9,7 +9,7 @@
 
   export const opts: Required<KindedOptions['ERC20']> = {
     kind: 'ERC20',
-    name: 'MyToken',
+    name: 'MyOpenSeaToken',
     symbol: 'MTK',
     burnable: false,
     snapshots: false,

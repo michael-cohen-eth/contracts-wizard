@@ -8,7 +8,6 @@ export interface Contract {
   imports: string[];
   functions: ContractFunction[];
   constructorCode: string[];
-  constructorArgs: FunctionArgument[];
   variables: string[];
   upgradeable: boolean;
   constructorArgs: FunctionArgument[];

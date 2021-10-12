@@ -6,7 +6,7 @@ import { generateAlternatives } from './alternatives';
 const booleans = [true, false];
 
 const blueprint = {
-  name: ['MyOpenSeaNFT'],
+  name: ['MyOSToken'],
   symbol: ['OSNFT'],
   baseUri: ['https://example.com/'],
   enumerable: booleans,

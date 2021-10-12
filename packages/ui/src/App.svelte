@@ -5,7 +5,6 @@
 
     import ERC721Controls from './ERC721Controls.svelte';
     import ERC1155Controls from './ERC1155Controls.svelte';
-    import GovernorControls from './GovernorControls.svelte';
     import CopyIcon from './icons/CopyIcon.svelte';
     import RemixIcon from './icons/RemixIcon.svelte';
     import DownloadIcon from './icons/DownloadIcon.svelte';
@@ -17,7 +16,7 @@
     import OverflowMenu from './OverflowMenu.svelte';
 
     import type { KindedOptions, Kind, Contract, OptionsErrorMessages } from '@openzeppelin/wizard';
-    import { ContractBuilder, buildGeneric, printContract, printContractVersioned, sanitizeKind, OptionsError } from '@openzeppelin/wizard';
+    import { ContractBuilder, buildGeneric, printContract, printContractVersioned, printContractsVersioned, sanitizeKind, OptionsError } from '@openzeppelin/wizard';
     import { postConfig } from './post-config';
     import { remixURL } from './remix';
 
@@ -25,18 +24,19 @@
     import { printContracts } from '@openzeppelin/wizard/src';
 
     const dispatch = createEventDispatcher();
+    export let tab: Kind = 'ERC721';
+    $: {
+      tab = sanitizeKind(tab);
       dispatch('tab-change', tab);
     };
-
     let allOpts: { [k in Kind]?: Required<KindedOptions[k]> } = {};
     let errors: { [k in Kind]?: OptionsErrorMessages } = {};
-
+    $: contracts = opts ? buildGeneric(opts) : [new ContractBuilder('MyOpenSeaContract')];
     $: opts = allOpts[tab];
-
     $: {
       if (opts) {
         try {
-          contract = buildGeneric(opts);
+          contracts = buildGeneric(opts);
           errors[tab] = undefined;
         } catch (e: unknown) {
           if (e instanceof OptionsError) {
@@ -47,8 +47,7 @@
         }
       }
     }
-
-    $: code = printContract(contract);
+    $: code = printContracts(contracts);
     $: highlightedCode = hljs.highlight('solidity', code).value;
 
     const copyHandler = async () => {
@@ -96,9 +95,6 @@
         </button>
         <button class:selected={tab === 'ERC1155'} on:click={() => tab = 'ERC1155'}>
           ERC1155
-        </button>
-        <button class:selected={tab === 'Governor'} on:click={() => tab = 'Governor'}>
-          Governor
         </button>
       </OverflowMenu>
     </div>
@@ -148,9 +144,6 @@
       </div>
       <div class:display-none={tab !== 'ERC1155'}>
         <ERC1155Controls bind:opts={allOpts.ERC1155} />
-      </div>
-      <div class:display-none={tab !== 'Governor'}>
-        <GovernorControls bind:opts={allOpts.Governor} errors={errors.Governor} />
       </div>
       <div class="controls-footer">
         <a href="https://forum.openzeppelin.com/" target="_blank">

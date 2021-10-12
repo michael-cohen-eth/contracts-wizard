@@ -9,16 +9,27 @@ import { mapValues } from './utils/map-values';
 const SOLIDITY_VERSION = '0.8.2';
 
 export function printContracts(contract: Contract[], opts?: Options): string {
-  // if (Array.isArray(contract) && contract.length > 1) {
+
+    const helpers = Object.assign({}, ...contract.map(c => ({[c.name]: withHelpers(c, opts)})))
+  
+    // const fnsDict = contract.reduce((acc, c) => ({...acc, [c.name]: mapValues(sortedFunctions(c), fns => fns.map(fn => printFunction(fn, helpers[c.name])))}), {});
+    var fnsDict = new Map<string, any>();
+    for (const c of contract) {
+      fnsDict.set(c.name, mapValues(sortedFunctions(c), fns=> fns.map(fn => printFunction(fn, helpers[c.name]))));
+    }
+    // const hasOverrides = fns.override.some(l => l.length > 0);
+    const hasOverrides = Object.assign({}, ...contract.map(c => ({[c.name]: fnsDict.get(c.name).override.some((l: string | any[]) => l.length > 0)})))
+    // const hasOverrides = contract.reduce((acc, c) => ({...acc, [c.name]: fnsDict.get(c.name).override.some(l => l.length > 0)}), {})
+    
+    // if (Array.isArray(contract) && contract.length > 1) {
     let cArr = contract!;
     const imports: string[] = [];
     const contractHeaderLine: string[] = [];
     const contractLines: Lines[] = [];
     for (let i = 0; i != cArr.length; i+=1) {
       const c = cArr[i]!;
-      const helpers = withHelpers(c, opts);
-      c.imports.forEach(p => imports.push(`import "${helpers.transformImport(p)}";`));
-      contractHeaderLine.push([`contract ${c.name}`, ...printInheritance(c, helpers), '{'].join(' '));
+      c.imports.forEach(p => imports.push(`import "${helpers[c.name].transformImport(p)}";`));
+      contractHeaderLine.push([`contract ${c.name}`, ...printInheritance(c, helpers[c.name]), '{'].join(' '));
       contractLines.push();
     }
 
@@ -32,18 +43,20 @@ export function printContracts(contract: Contract[], opts?: Options): string {
         ],
         imports,
         cArr.map(c => {
-          const helpers = withHelpers(c, opts);
           if (c.variables.length == 0 && c.functions.length == 0 && c.constructorCode.length == 0) {
-            return [[`contract ${c.name}`, ...printInheritance(c, helpers), '{', '}'].join(' '), ' '];
+            return [[`contract ${c.name}`, ...printInheritance(c, helpers[c.name]), '{', '}'].join(' '), ' '];
           } else {
             return [
-              [`contract ${c.name}`, ...printInheritance(c, helpers), '{'].join(' '),
+              [`contract ${c.name}`, ...printInheritance(c, helpers[c.name]), '{'].join(' '),
       
               spaceBetween(
-                printUsingFor(c, helpers),
-                c.variables.map(helpers.transformVariable),
-                printConstructor(c, helpers),
-                ...sortedFunctions(c).map(f => printFunction(f, helpers)),
+                printUsingFor(c, helpers[c.name]),
+                c.variables.map(helpers[c.name].transformVariable),
+                printConstructor(c, helpers[c.name]),
+                ...fnsDict.get(c.name).code,
+                ...fnsDict.get(c.name).modifiers,
+                hasOverrides[c.name] ? [`// The following functions are overrides required by Solidity.`] : [],
+                ...fnsDict.get(c.name).override,
               ),
       
               `}`,

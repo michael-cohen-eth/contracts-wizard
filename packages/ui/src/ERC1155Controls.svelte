@@ -8,7 +8,7 @@
 
   export const opts: Required<KindedOptions['ERC1155']> = {
     kind: 'ERC1155',
-    name: 'MyToken',
+    name: 'MyOSToken',
     uri: '',
     burnable: false,
     pausable: false,

@@ -1,12 +1,12 @@
 import test from 'ava';
 
-import { zipContract } from './zip';
+import { zipContract, zipContracts } from './zip';
 import { buildERC20 } from './erc20';
 import { generateSources } from './generate/sources';
 import { buildGeneric } from './build-generic';
 
 test('erc20 basic', t => {
-  const c = buildERC721Single({ name: 'MyToken', symbol: 'MTK' });
+  const c = buildERC20({ name: 'MyToken', symbol: 'MTK' });
   const zip = zipContract(c);
   const files = Object.values(zip.files).map(f => f.name).sort();
 
@@ -29,7 +29,7 @@ test('erc20 basic', t => {
 test('can zip all combinations', t => {
   for (const { options } of generateSources('all')) {
     const c = buildGeneric(options);
-    zipContract(c);
+    zipContracts(c);
   }
   t.pass();
 });

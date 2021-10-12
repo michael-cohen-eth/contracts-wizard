@@ -181,7 +181,10 @@ function addOpenSeaEnabled(c: ContractBuilder, access: Access, enabled = false) 
 }
 
 function addProxyRegistryAddress(c: ContractBuilder) {
-  c.addConstructorArgs("_proxyRegistryAddress", "address");
+  c.addConstructorArgument({
+    type: "address",
+    name: "_proxyRegistryAddress",
+  });
   c.addVariable('address proxyRegistryAddress;');
   c.addConstructorCode('proxyRegistryAddress = _proxyRegistryAddress;')
 }

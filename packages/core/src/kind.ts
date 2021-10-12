@@ -9,14 +9,13 @@ export function sanitizeKind(kind: unknown): Kind {
       return sanitized;
     }
   }
-  return 'ERC20';
+  return 'ERC721';
 }
 
 function isKind<T>(value: Kind | T): value is Kind {
   switch (value) {
     case 'ERC1155':
     case 'ERC721':
-    case 'Governor':
       return true;
 
     default: {

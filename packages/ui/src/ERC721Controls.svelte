@@ -8,7 +8,7 @@
 
   export const opts: Required<KindedOptions['ERC721']> = {
     kind: 'ERC721',
-    name: 'MyOpenSeaNFT',
+    name: 'MyOSToken',
     symbol: 'OSNFT',
     baseUri: '',
     enumerable: false,

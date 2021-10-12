@@ -5,8 +5,7 @@ import crypto from 'crypto';
 import { generateERC721Options } from './erc721';
 import { generateERC1155Options } from './erc1155';
 import { buildGeneric, GenericOptions } from '../build-generic';
-import { printContract } from '../print';
-import { generateGovernorOptions } from './governor';
+import { printContracts } from '../print';
 import { OptionsError } from '../error';
 import { findCover } from '../utils/find-cover';
 import type { Contract } from '../contract';
@@ -14,9 +13,6 @@ import type { Contract } from '../contract';
 type Subset = 'all' | 'minimal-cover';
 
 export function* generateOptions(): Generator<GenericOptions> {
-  for (const kindOpts of generateERC20Options()) {
-    yield { kind: 'ERC20', ...kindOpts };
-  }
 
   for (const kindOpts of generateERC721Options()) {
     yield { kind: 'ERC721', ...kindOpts };
@@ -26,15 +22,12 @@ export function* generateOptions(): Generator<GenericOptions> {
     yield { kind: 'ERC1155', ...kindOpts };
   }
 
-  for (const kindOpts of generateGovernorOptions()) {
-    yield { kind: 'Governor', ...kindOpts };
-  }
 }
 
 interface GeneratedContract {
   id: string;
   options: GenericOptions;
-  contract: Contract;
+  contractList: Contract[];
 }
 
 interface GeneratedSource extends GeneratedContract {
@@ -52,8 +45,8 @@ function generateContractSubset(subset: Subset): GeneratedContract[] {
       .toString('hex');
 
     try {
-      const contract = buildGeneric(options);
-      contracts.push({ id, options, contract });
+      const contractList = buildGeneric(options);
+      contracts.push({ id, options, contractList });
     } catch (e: unknown) {
       if (e instanceof OptionsError) {
         continue;
@@ -66,7 +59,7 @@ function generateContractSubset(subset: Subset): GeneratedContract[] {
   if (subset === 'all') {
     return contracts;
   } else {
-    const getParents = (c: GeneratedContract) => c.contract.parents.map(p => p.contract.path);
+    const getParents = (c: GeneratedContract) => c.contractList.map(contract => contract.parents.map(p => p.contract.path));
     return [
       ...findCover(contracts.filter(c => c.options.upgradeable), getParents),
       ...findCover(contracts.filter(c => !c.options.upgradeable), getParents),
@@ -76,7 +69,7 @@ function generateContractSubset(subset: Subset): GeneratedContract[] {
 
 export function* generateSources(subset: Subset): Generator<GeneratedSource> {
   for (const c of generateContractSubset(subset)) {
-    const source = printContract(c.contract);
+    const source = printContracts(c.contractList);
     yield { ...c, source };
   }
 }

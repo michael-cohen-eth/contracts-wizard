@@ -6,7 +6,7 @@ import { generateAlternatives } from './alternatives';
 const booleans = [true, false];
 
 const blueprint = {
-  name: ['MyToken'],
+  name: ['MyOSToken'],
   symbol: ['MTK'],
   burnable: booleans,
   snapshots: booleans,
